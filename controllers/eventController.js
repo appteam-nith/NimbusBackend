@@ -34,3 +34,48 @@ exports.getAllEvents = async (req, res) => {
       res.status(500).json({ message: 'Error fetching events', error: err.message });
     }
   };
+
+
+// Update an event
+exports.updateEvent = async (req, res) => {
+  const { id } = req.params;
+  const { clubId, name, description } = req.body;
+  
+  try {
+    // Find the event by ID and update it
+    const event = await Event.findByIdAndUpdate(
+      id, 
+      { clubId, name, description },
+      { new: true, runValidators: true } // new: returns the updated document, runValidators: apply schema validation
+    );
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    res.status(200).json({ message: 'Event updated successfully', event });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating event', error: err.message });
+  }
+};
+
+
+
+
+// Delete an event
+exports.deleteEvent = async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    // Find the event by ID and delete it
+    const event = await Event.findByIdAndDelete(id);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    res.status(200).json({ message: 'Event deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting event', error: err.message });
+  }
+};

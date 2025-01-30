@@ -50,7 +50,7 @@ const router = express.Router();
  *       403:
  *         description: Forbidden - user lacks required role.
  */
-router.post('/clubs', authenticateToken, authorizeRole('clubAdmin'), createClub);
+router.post('/clubs', authenticateToken, authorizeRole('user'), createClub);
 
 /**
  * @swagger
@@ -78,7 +78,11 @@ router.post('/clubs', authenticateToken, authorizeRole('clubAdmin'), createClub)
  *                     type: string
  *                     example: "A club focused on technology and innovation."
  */
-router.get('/clubs',  getAllClubs);
+router.get('/clubs', 
+    authenticateToken, 
+    authorizeRole('user', 'clubAdmin', 'admin'), 
+    getAllClubs
+);
 
 /**
  * @swagger
@@ -112,7 +116,11 @@ router.get('/clubs',  getAllClubs);
  *       404:
  *         description: Club not found.
  */
-router.get('/clubs/:name',  getClub);
+router.get('/clubs/:id', 
+    authenticateToken, 
+    authorizeRole('user', 'clubAdmin', 'admin'), 
+    getClub
+);
 
 router.get('/balance/:clubId', getClubBalance);
 

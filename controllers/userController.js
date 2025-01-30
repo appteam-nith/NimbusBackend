@@ -6,6 +6,27 @@ require('dotenv').config();
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
+// generate Token
+const generateAccessAndRefereshTokens = async(userId) =>{
+  try {
+      const user = await User.findById(userId)
+      const accessToken = user.generateAccessToken()
+      const refreshToken = user.generateRefreshToken()
+
+      console.log(accessToken, refreshToken);
+      user.refreshToken = refreshToken
+      await user.save({ validateBeforeSave: false })
+
+      return {accessToken, refreshToken}
+
+
+  } catch (error) {
+      console.log(error);
+  }
+}
+
+
+
 // Create a new user
 exports.createUser = async (req, res) => {
   try {
@@ -107,33 +128,61 @@ exports.getUSer = async (req, res) => {
 // };
 
 
+// Enhanced login controller
 exports.loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+      const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
+      const user = await User.findOne({ email });
+      if (!user) {
+          return res.status(401).json({ message: 'Invalid credentials' });
+      }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password Match:", isMatch);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+          return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      console.log("ismatch", isMatch);
 
-    // Generate JWT tokens
-    const accessToken = jwt.sign({ userId: user._id, role: user.role }, ACCESS_TOKEN_SECRET, {
-      expiresIn: '15m',
-    });
+      // const accessToken = user.generateAccessToken();
+      // const refreshToken = user.generateRefreshToken();
 
-    const refreshToken = jwt.sign({ userId: user._id }, REFRESH_TOKEN_SECRET, {
-      expiresIn: '7d',
-    });
 
-    res.status(200).json({ accessToken, refreshToken });
+      const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+
+      // Save refresh token to user document
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      res.status(200).json({
+          accessToken,
+          refreshToken,
+          user: {
+              id: user._id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              balance: user.balance
+          }
+      });
   } catch (error) {
-    res.status(500).json({ message: 'Error logging in', error: error.message });
+      console.log(error)
+      res.status(500).json({ message: 'Error logging in', error: error.message });
+  }
+};
+
+exports.getUserProfile = async (req, res) => {
+  try {
+      const user = await User.findById(req.user.userId)
+          .select('-password -refreshToken');
+          
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.status(200).json(user);
+  } catch (error) {
+      res.status(500).json({ message: 'Error fetching profile', error: error.message });
   }
 };
 

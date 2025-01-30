@@ -1,10 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const eventController = require('./controllers/eventController');
-const { authenticateToken, authorizeRole } = require('./middlewares/auth');
+const eventController = require('../controllers/eventController');
+const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
 
 // Event Routes
-router.post('/event', authenticateToken, authorizeRole('clubAdmin'), eventController.createEvent);
-router.get('/events',  eventController.getAllEvents);
-router.get('/event/:id',  eventController.getEventById);
+// Public routes
+router.get('/events', eventController.getAllEvents);
+router.get('/events/:id', eventController.getAllEvents);
+
+// Protected routes
+router.post('/events', 
+    authenticateToken, 
+    authorizeRole('clubAdmin', 'admin', 'user'), 
+    eventController.createEvent
+);
+
+router.put('/events/:id', 
+    authenticateToken, 
+    authorizeRole('clubAdmin', 'admin'), 
+    eventController.updateEvent
+);
+
+router.delete('/events/:id', 
+    authenticateToken, 
+    authorizeRole('clubAdmin', 'admin'), 
+    eventController.deleteEvent
+);
+
+
+module.exports = router;

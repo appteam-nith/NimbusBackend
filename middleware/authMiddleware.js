@@ -3,25 +3,31 @@ require('dotenv').config();
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
-// Authenticate JWT Token
 exports.authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    console.log("error yhaa aa rha h ");
+    if (!token) return res.status(401).json({ message: 'Authorization token required' });
 
-  if (!token) return res.status(401).json({ message: 'Token required' });
+    jwt.verify(token, ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ message: 'Invalid or expired token' });
 
-  jwt.verify(token, ACCESS_TOKEN_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Invalid token' });
-
-    req.user = user;
-    next();
-  });
+        req.user = {
+            userId: decoded.userId,
+            role: decoded.role
+        };
+        next();
+    });
 };
 
-// Role-based authorization
-exports.authorizeRole = (role) => (req, res, next) => {
-  if (req.user.role !== role) {
-    return res.status(403).json({ message: 'Access denied' });
-  }
-  next();
+
+exports.authorizeRole = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ 
+                message: `Role ${req.user.role} is not authorized to access this resource`
+            });
+        }
+        next();
+    };
 };

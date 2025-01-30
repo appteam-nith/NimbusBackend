@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSchema
   name: {
@@ -26,6 +27,9 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
     type: Number,
     default: 0
   },
+  refreshToken: {
+    type: String
+},
   role: {
     type: String,
     enum: ['user', 'admin', 'clubAdmin'],
@@ -40,6 +44,31 @@ userSchema.pre('save', async function (next) {
   }
   next();
 });
+
+userSchema.methods.generateAccessToken = function() {
+  return jwt.sign(
+      {
+          userId: this._id,
+          role: this.role,
+          name: this.name,
+          rollNo: this.rollNo,
+          email: this.email,
+          balance: this.balance,
+          refreshToken: this.refreshToken
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+  );
+};
+
+userSchema.methods.generateRefreshToken = function() {
+  return jwt.sign(
+      { userId: this._id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '7d' }
+  );
+};
+
 
 const User = mongoose.model('User', userSchema); // Ensure the correct schema name is passed here
 

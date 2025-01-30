@@ -7,6 +7,7 @@ const userRoutes = require('./routes/userRoutes');
 const clubRoutes = require('./routes/clubRoutes');
 const bankRoutes = require('./routes/bankRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 const app = express();
 
 // Middleware to parse JSON
@@ -21,10 +22,11 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api', userRoutes);
 app.use('/api', clubRoutes);
 app.use('/api', bankRoutes);
+app.use('/api', eventRoutes);
 app.use('/api', transactionRoutes);
 
 
-setupSwagger(app);
+setupSwagger(app)
 // Start the server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

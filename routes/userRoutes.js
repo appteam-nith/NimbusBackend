@@ -95,8 +95,8 @@ router.get('/balance/:userId', userController.getBalance);
  *       401:
  *         description: Unauthorized or invalid token.
  */
-router.get('/users/protected-route', authenticateToken, authorizeRole('Admin'), (req, res) => {
-  res.status(200).json({ message: 'Access granted to Admin' });
-});
+// router.get('/users/protected-route', authenticateToken, authorizeRole('Admin'), (req, res) => {
+//   res.status(200).json({ message: 'Access granted to Admin' });
+// });
 
 module.exports = router;
