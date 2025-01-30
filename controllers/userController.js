@@ -136,3 +136,23 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: 'Error logging in', error: error.message });
   }
 };
+
+
+exports.getBalance = async (req, res) => {
+  try {
+    const userId = req.params.userId; // Assuming userId is passed in the URL
+
+    // Find the user by their unique roll number or ID (based on your schema)
+    const user = await User.findById(userId); 
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Send back the balance of the user
+    res.status(200).json({ balance: user.balance });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

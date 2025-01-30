@@ -39,3 +39,24 @@ exports.getClub = async (req, res) => {
         res.status(404).json({ message: 'Club not found' });
     }
 }
+
+
+
+exports.getClubBalance =  async (req, res) => {
+  try {
+    const clubId = req.params.clubId; // Assuming clubId is passed in the URL
+
+    // Find the club by its unique ID
+    const club = await Club.findById(clubId);
+
+    if (!club) {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+
+    // Send back the balance of the club
+    res.status(200).json({ balance: club.balance });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}

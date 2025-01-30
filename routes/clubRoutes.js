@@ -1,5 +1,5 @@
 const express = require('express');
-const { createClub, getAllClubs, getClub } = require('../controllers/clubController');
+const { createClub, getAllClubs, getClub, getClubBalance } = require('../controllers/clubController');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 const router = express.Router();
 
@@ -78,7 +78,7 @@ router.post('/clubs', authenticateToken, authorizeRole('clubAdmin'), createClub)
  *                     type: string
  *                     example: "A club focused on technology and innovation."
  */
-router.get('/clubs', authenticateToken, getAllClubs);
+router.get('/clubs',  getAllClubs);
 
 /**
  * @swagger
@@ -112,6 +112,8 @@ router.get('/clubs', authenticateToken, getAllClubs);
  *       404:
  *         description: Club not found.
  */
-router.get('/clubs/:name', authenticateToken, getClub);
+router.get('/clubs/:name',  getClub);
+
+router.get('/balance/:clubId', getClubBalance);
 
 module.exports = router;
