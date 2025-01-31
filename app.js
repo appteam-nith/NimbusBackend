@@ -6,12 +6,19 @@ const authMiddleware = require('./middleware/authMiddleware')
 const userRoutes = require('./routes/userRoutes');
 const clubRoutes = require('./routes/clubRoutes');
 const bankRoutes = require('./routes/bankRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const app = express();
 
 // Middleware to parse JSON
+
+app.set('view engine', 'ejs')
 app.use(express.json());
+const methodOverride = require('method-override');
+app.use(methodOverride('_method')); // Allows method override via query parameter `_method`
+app.use(express.urlencoded({ extended: true }));
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -23,6 +30,7 @@ app.use('/api', userRoutes);
 app.use('/api', clubRoutes);
 app.use('/api', bankRoutes);
 app.use('/api', eventRoutes);
+app.use('/api/quiz', quizRoutes);
 app.use('/api', transactionRoutes);
 
 

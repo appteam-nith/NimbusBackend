@@ -34,7 +34,9 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
     type: String,
     enum: ['user', 'admin', 'clubAdmin'],
     default: 'user'
-  }
+  },
+  correctAnswers: { type: Number, default: 0 },
+  submissionTime: { type: Date, default: Date.now }
 });
 
 userSchema.pre('save', async function (next) {
