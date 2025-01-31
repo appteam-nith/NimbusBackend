@@ -83,7 +83,7 @@ const router = express.Router();
 router.post('/transactions/transfer-to-club', transactionController.transferMoneyToClub);
 
 // Get user transaction history
-router.get('/user/:userId',  transactionController.getUserTransactionHistory);
+router.get('/user/:userId',authenticateToken , transactionController.getUserTransactionHistory);
 
 // Get club transaction history
 router.get('/club/:clubId',  transactionController.getClubTransactionHistory);

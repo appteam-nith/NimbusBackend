@@ -156,48 +156,81 @@ exports.getUSer = async (req, res) => {
 
 
 // Enhanced login controller
+// exports.loginUser = async (req, res) => {
+//   try {
+//       const { email, password } = req.body;
+
+//       const user = await User.findOne({ email });
+//       if (!user) {
+//           return res.status(401).json({ message: 'Invalid credentials' });
+//       }
+
+//       const isMatch = await bcrypt.compare(password, user.password);
+//       if (!isMatch) {
+//           return res.status(401).json({ message: 'Invalid credentials' });
+//       }
+//       const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+
+//       // Save refresh token to user document
+//       user.refreshToken = refreshToken;
+//       await user.save();
+
+//       res.status(200).json({
+//           accessToken,
+//           refreshToken,
+//           user: {
+//               id: user._id,
+//               name: user.name,
+//               email: user.email,
+//               role: user.role,
+//               balance: user.balance
+//           }
+//       });
+//   } catch (error) {
+//       console.log(error)
+//       res.status(500).json({ message: 'Error logging in', error: error.message });
+//   }
+// };
 exports.loginUser = async (req, res) => {
   try {
-      const { email, password } = req.body;
+    const { email, password } = req.body;
+    
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
 
-      const user = await User.findOne({ email });
-      if (!user) {
-          return res.status(401).json({ message: 'Invalid credentials' });
+    // Verify the password
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate access and refresh tokens
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    // Save the refresh token in the user document
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // Send the tokens as response
+    res.json({
+      accessToken,
+      refreshToken,
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        balance: user.balance
       }
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-          return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      // console.log("ismatch", isMatch);
-
-      // const accessToken = user.generateAccessToken();
-      // const refreshToken = user.generateRefreshToken();
-
-
-      const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
-
-      // Save refresh token to user document
-      user.refreshToken = refreshToken;
-      await user.save();
-
-      res.status(200).json({
-          accessToken,
-          refreshToken,
-          user: {
-              id: user._id,
-              name: user.name,
-              email: user.email,
-              role: user.role,
-              balance: user.balance
-          }
-      });
-  } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: 'Error logging in', error: error.message });
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error logging in', error: err.message });
   }
 };
-
 exports.getUserProfile = async (req, res) => {
   try {
       const user = await User.findById(req.user.userId)

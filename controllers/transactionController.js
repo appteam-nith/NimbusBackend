@@ -56,14 +56,40 @@ exports.transferMoneyToClub = async (req, res) => {
 };
 
 
+// exports.getUserTransactionHistory = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     console.log(userId)
+//     console.log("Request User:", req.user.userId);
+
+//     if (req.params.userId !== User.userId ) {
+//       return res.status(403).json({ message: 'Unauthorized access' });
+//     }
+
+//     const userTransactions = await Transaction.find({
+//       $or: [
+//         { senderId: userId, senderModel: 'User' },
+//         { receiverId: userId, receiverModel: 'User' }
+//       ]
+//     }).sort({ timestamp: -1 });
+
+//     res.status(200).json({ transactions: userTransactions });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching transaction history', error: error.message });
+//   }
+// };
+
 exports.getUserTransactionHistory = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params; // Extract userId from the URL parameters
+    console.log("Request User:", req.user);  // Check the decoded user info
 
-    if (req.user.userId !== userId && req.user.role !== 'admin') {
+    // Compare the userId from token with the userId in the params
+    if (req.user.userId !== userId) {
       return res.status(403).json({ message: 'Unauthorized access' });
     }
 
+    // Query the database to find transactions
     const userTransactions = await Transaction.find({
       $or: [
         { senderId: userId, senderModel: 'User' },
@@ -76,6 +102,7 @@ exports.getUserTransactionHistory = async (req, res) => {
     res.status(500).json({ message: 'Error fetching transaction history', error: error.message });
   }
 };
+
 
 exports.getClubTransactionHistory = async (req, res) => {
   try {
