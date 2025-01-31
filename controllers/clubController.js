@@ -32,13 +32,45 @@ exports.getAllClubs = async (req, res) => {
 };
 
 // get club by id or name
+// exports.getClub = async (req, res) => {
+//   try {
+//     const club = await Club.findById(req.params._id);
+    
+//     if (!club) {
+//       return res.status(404).json({ message: 'Club not found' });
+//     }
+
+//     res.status(200).json(club);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ message: 'Error retrieving club', error: error.message });
+//   }
+// };
+const mongoose = require('mongoose');
+
 exports.getClub = async (req, res) => {
-    try {
-        const club = await Club.find({name: req.params.name});
-    }catch{
-        res.status(404).json({ message: 'Club not found' });
+  try {
+    const clubId = req.params.clubId;
+console.log(clubId);
+    // Check if the provided _id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(clubId)) {
+      return res.status(400).json({ message: 'Invalid club ID format' });
     }
-}
+console.log(clubId);
+    const club = await Club.findById(clubId);
+    
+    if (!club) {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+
+    res.status(200).json(club);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Error retrieving club', error: error.message });
+  }
+};
+
+
 
 
 

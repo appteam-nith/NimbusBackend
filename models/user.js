@@ -35,6 +35,9 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
     enum: ['user', 'admin', 'clubAdmin'],
     default: 'user'
   },
+  transactionHistory:{
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }]
+  },
   correctAnswers: { type: Number, default: 0 },
   submissionTime: { type: Date, default: Date.now }
 });

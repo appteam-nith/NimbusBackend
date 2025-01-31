@@ -6,7 +6,7 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 exports.authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    console.log("error yhaa aa rha h ");
+    
     if (!token) return res.status(401).json({ message: 'Authorization token required' });
 
     jwt.verify(token, ACCESS_TOKEN_SECRET, (err, decoded) => {

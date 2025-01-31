@@ -116,7 +116,7 @@ router.get('/clubs',
  *       404:
  *         description: Club not found.
  */
-router.get('/clubs/:id', 
+router.get('/clubs/:clubId', 
     authenticateToken, 
     authorizeRole('user', 'clubAdmin', 'admin'), 
     getClub

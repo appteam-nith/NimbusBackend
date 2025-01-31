@@ -7,23 +7,50 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 // generate Token
-const generateAccessAndRefereshTokens = async(userId) =>{
+// const generateAccessAndRefereshTokens = async(userId) =>{
+//   try {
+//       const user = await User.findById(userId)
+//       const accessToken = user.generateAccessToken()
+//       const refreshToken = user.generateRefreshToken()
+
+//       console.log(accessToken, refreshToken);
+//       user.refreshToken = refreshToken
+//       await user.save({ validateBeforeSave: false })
+
+//       return {accessToken, refreshToken}
+
+
+//   } catch (error) {
+//       console.log(error);
+//   }
+// }
+
+const generateAccessAndRefreshTokens = async (userId) => {
   try {
-      const user = await User.findById(userId)
-      const accessToken = user.generateAccessToken()
-      const refreshToken = user.generateRefreshToken()
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-      console.log(accessToken, refreshToken);
-      user.refreshToken = refreshToken
-      await user.save({ validateBeforeSave: false })
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
-      return {accessToken, refreshToken}
+    if (!accessToken || !refreshToken) {
+      throw new Error('Failed to generate tokens');
+    }
 
+    // console.log(accessToken, refreshToken);
 
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
   } catch (error) {
-      console.log(error);
+    console.log(error);
+    throw new Error(error.message || 'Error generating tokens');
   }
-}
+};
+
 
 
 
@@ -142,13 +169,13 @@ exports.loginUser = async (req, res) => {
       if (!isMatch) {
           return res.status(401).json({ message: 'Invalid credentials' });
       }
-      console.log("ismatch", isMatch);
+      // console.log("ismatch", isMatch);
 
       // const accessToken = user.generateAccessToken();
       // const refreshToken = user.generateRefreshToken();
 
 
-      const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+      const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
       // Save refresh token to user document
       user.refreshToken = refreshToken;
