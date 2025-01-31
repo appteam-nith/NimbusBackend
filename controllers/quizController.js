@@ -1,5 +1,5 @@
-const Question = require('../models/questionModel');
-const User = require('../models/userModel');
+const Question = require('../models/questions');
+const User = require('../models/user');
 
 // Fetch questions
 exports.getQuestions = async (req, res) => {

@@ -15,8 +15,7 @@ const app = express();
 
 app.set('view engine', 'ejs')
 app.use(express.json());
-const methodOverride = require('method-override');
-app.use(methodOverride('_method')); // Allows method override via query parameter `_method`
+// Allows method override via query parameter `_method`
 app.use(express.urlencoded({ extended: true }));
 
 
