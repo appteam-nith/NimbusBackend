@@ -8,14 +8,11 @@ exports.transferMoneyToClub = async (req, res) => {
   try {
     const { rollNo, clubId, amount } = req.body;
 
-    // Find user
-    console.log("Received rollNo:", rollNo); 
+    // Find user 
     const user = await User.findOne({ rollNo:rollNo});
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    console.log("Received rollNo:", rollNo); 
-
     // Find club
     const club = await Club.findById(clubId);
     if (!club) {

@@ -1,5 +1,5 @@
 const Club = require('../models/club');
-
+const mongoose = require('mongoose');
 // Create a new club
 exports.createClub = async (req, res) => {
   try {
@@ -46,17 +46,17 @@ exports.getAllClubs = async (req, res) => {
 //     res.status(500).json({ message: 'Error retrieving club', error: error.message });
 //   }
 // };
-const mongoose = require('mongoose');
+
 
 exports.getClub = async (req, res) => {
   try {
     const clubId = req.params.clubId;
-console.log(clubId);
+
     // Check if the provided _id is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(clubId)) {
       return res.status(400).json({ message: 'Invalid club ID format' });
     }
-console.log(clubId);
+
     const club = await Club.findById(clubId);
     
     if (!club) {

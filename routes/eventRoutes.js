@@ -7,12 +7,12 @@ const { authenticateToken, authorizeRole } = require('../middleware/authMiddlewa
 // Event Routes
 // Public routes
 router.get('/events', eventController.getAllEvents);
-router.get('/events/:id', eventController.getAllEvents);
+router.get('/events/:id', eventController.getEventById);
 
 // Protected routes
 router.post('/events', 
     authenticateToken, 
-    authorizeRole('clubAdmin', 'admin', 'user'), 
+    authorizeRole('clubAdmin', 'admin'), 
     eventController.createEvent
 );
 
