@@ -108,10 +108,12 @@ exports.getClubTransactionHistory = async (req, res) => {
   try {
     const { clubId } = req.params;
 
-    if (req.user.role !== 'admin' && req.user.role !== 'clubAdmin') {
+    if (req.user.role !== 'admin' && req.user.role !== 'clubAdmin'
+
+    ) {
       return res.status(403).json({ message: 'Unauthorized access' });
     }
-
+ 
     const clubTransactions = await Transaction.find({
       $or: [
         { senderId: clubId, senderModel: 'Club' },

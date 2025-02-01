@@ -86,7 +86,7 @@ router.post('/transactions/transfer-to-club', transactionController.transferMone
 router.get('/user/:userId',authenticateToken , transactionController.getUserTransactionHistory);
 
 // Get club transaction history
-router.get('/club/:clubId',  transactionController.getClubTransactionHistory);
+router.get('/club/:clubId',authenticateToken ,  transactionController.getClubTransactionHistory);
 
 
 module.exports = router;
