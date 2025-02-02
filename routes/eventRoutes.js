@@ -12,8 +12,8 @@ router.get('/events/:id', eventController.getEventById);
 // Protected routes
 router.post('/events', 
     authenticateToken, 
-    authorizeRole('clubAdmin', 'admin'), 
-    eventController.createEvent
+    authorizeRole('clubAdmin', 'admin', ), 
+    eventController.createEvent 
 );
 
 router.put('/events/:id', 
