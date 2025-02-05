@@ -84,32 +84,32 @@ exports.submitQuiz = async (req, res) => {
 };
 
 
-// // Leaderboard
-// exports.getLeaderboard = async (req, res) => {
-//   try {
-//     const users = await User.find().sort({ correctAnswers: -1 });
-//     res.json(users);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error fetching leaderboard' });
-//   }
-// };
+// // // Leaderboard
+exports.getLeaderboard = async (req, res) => {
+  try {
+    const users = await User.find().sort({ correctAnswers: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching leaderboard' });
+  }
+};
 
-//posting question 
-// exports.postQuestion= async(req,res)=>{
-//     try{
-//         const {question, options, correctAnswer}=req.body;
-//         const Newquestions = new Question({
-//             question,
-//             options,correctAnswer
-//         });
-//         await Newquestions.save();
-//         res.status(201).json({ message: 'Question posted successfully' });
+// //posting question 
+// // exports.postQuestion= async(req,res)=>{
+// //     try{
+// //         const {question, options, correctAnswer}=req.body;
+// //         const Newquestions = new Question({
+// //             question,
+// //             options,correctAnswer
+// //         });
+// //         await Newquestions.save();
+// //         res.status(201).json({ message: 'Question posted successfully' });
 
 
-//     }catch(error){
-//         res.status(500).json({message:'error in question posting'})
-//     }
-// }
+// //     }catch(error){
+// //         res.status(500).json({message:'error in question posting'})
+// //     }
+// // }
 
 
 
@@ -145,6 +145,120 @@ exports.postQuestion = async (req, res) => {
 };
 
 
+// exports.getEventRankings = async (req, res) => {
+//   try {
+//     const { eventId } = req.params;
+
+//     const users = await User.find({}).sort({ correctAnswers: -1, submissionTime: 1 });
+
+//     const rankings = users.map((user, index) => ({
+//       rank: index + 1,
+//       name: user.name,
+//       correctAnswers: user.correctAnswers,
+//       submissionTime: user.submissionTime
+//     }));
+
+//     return res.status(200).json(rankings);
+//   } catch (err) {
+//     return res.status(500).json({ message: err.message });
+//   }
+// };
+
+
+const Question = require('../models/questions');
+const User = require('../models/user');
+const Event = require('../models/event');
+
+// Fetch questions by event
+exports.getQuestions = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const questions = await Question.find({ eventId });
+    if (!questions.length) {
+      return res.status(404).json({ message: 'No questions found for this event' });
+    }
+    res.json(questions);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching questions' });
+  }
+};
+
+// Submit answers and calculate score
+exports.submitQuiz = async (req, res) => {
+  try {
+    const { eventId, answers } = req.body;
+    const userId = req.user.userId;
+
+    if (!eventId || !answers || answers.length === 0) {
+      return res.status(400).json({ message: "Invalid input: eventId and answers are required" });
+    }
+
+    const questions = await Question.find({ eventId });
+
+    if (!questions.length) {
+      return res.status(404).json({ message: "No questions found for this event" });
+    }
+
+    let correctCount = 0;
+    for (const answer of answers) {
+      const question = questions.find(q => q._id.toString() === answer.questionId);
+      if (question && question.correctAnswer === answer.selectedOption) {
+        correctCount++;
+      }
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update correct answers and submission time
+    user.correctAnswers += correctCount;
+    user.submissionTime = new Date();
+    await user.save();
+
+    res.status(200).json({
+      message: "Quiz submitted successfully",
+      correctAnswers: correctCount,
+      submissionTime: user.submissionTime
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Error submitting quiz" });
+  }
+};
+
+// Post new question for a specific event
+exports.postQuestion = async (req, res) => {
+  try {
+    const { eventId, question, options, correctAnswer } = req.body;
+
+    if (!eventId || !question || options.length !== 4 || correctAnswer === undefined) {
+      return res.status(400).json({ message: 'Invalid input: Must provide an eventId, question, four options, and a correct answer' });
+    }
+
+    // Ensure the event exists
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    const newQuestion = new Question({
+      eventId,
+      question,
+      options,
+      correctAnswer
+    });
+
+    await newQuestion.save();
+    res.status(201).json({ message: 'Question posted successfully', newQuestion });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Error in question posting' });
+  }
+};
+
+// Get event-specific rankings
 exports.getEventRankings = async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -163,6 +277,4 @@ exports.getEventRankings = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
-
 
