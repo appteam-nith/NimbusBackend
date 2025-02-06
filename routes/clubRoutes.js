@@ -50,7 +50,7 @@ const router = express.Router();
  *       403:
  *         description: Forbidden - user lacks required role.
  */
-router.post('/clubs', authenticateToken, authorizeRole('user'), createClub);
+router.post('/clubs', authenticateToken, authorizeRole('admin', 'clubAdmin'), createClub);
 
 /**
  * @swagger
