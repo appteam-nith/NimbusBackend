@@ -14,8 +14,9 @@ exports.authenticateToken = (req, res, next) => {
 
         req.user = {
             userId: decoded.userId,
-            role: decoded.role
+            role: decoded.role,
         };
+        console.log('Decoded token:', decoded); 
         next();
     });
 };
@@ -31,3 +32,15 @@ exports.authorizeRole = (...roles) => {
         next();
     };
 };
+
+exports.authorizeClubAccess = () => {
+    return async (req, res, next) => {
+      if (req.user.role === 'clubAdmin') {
+        const club = await Club.findById(req.params.clubId);
+        if (!club || club._id.toString() !== req.user.clubId.toString()) {
+          return res.status(403).json({ message: 'Unauthorized club access' });
+        }
+      }
+      next();
+    };
+  };

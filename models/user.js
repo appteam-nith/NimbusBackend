@@ -38,7 +38,18 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
   transactionHistory:{
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }]
   },
-  correctAnswers: { type: Number, default: 0 },
+  correctAnswers: { 
+    type: Map,
+    of: Number,
+    default: {}
+  },
+  // clubId: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'Club',
+  //   required: function() {
+  //     return this.role === 'clubAdmin';
+  //   }
+  // },
   submissionTime: { type: Date, default: Date.now }
 });
 
@@ -59,7 +70,8 @@ userSchema.methods.generateAccessToken = function() {
           rollNo: this.rollNo,
           email: this.email,
           balance: this.balance,
-          refreshToken: this.refreshToken
+          refreshToken: this.refreshToken,
+      
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
@@ -68,7 +80,10 @@ userSchema.methods.generateAccessToken = function() {
 
 userSchema.methods.generateRefreshToken = function() {
   return jwt.sign(
-      { userId: this._id },
+      { userId: this._id,
+        role: this.role,
+  
+       },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: '7d' }
   );

@@ -14,6 +14,15 @@ const clubSchema = new mongoose.Schema({
     balance: {
         type: Number,
         default: 0
+    },
+    image:{
+        type: String,
+        required: false
+    },
+    clubAdmin: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false,
     }
 });
 

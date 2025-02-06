@@ -12,7 +12,6 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-
 exports.getEventById = async (req, res) => {
     const { id } = req.params;
     try {
@@ -23,9 +22,7 @@ exports.getEventById = async (req, res) => {
       res.status(500).json({ message: 'Error fetching event', error: err.message });
     }
   };
-  
 
-  // Get all events
 exports.getAllEvents = async (req, res) => {
     try {
       const events = await Event.find().populate('clubId attendees').exec();
@@ -35,8 +32,6 @@ exports.getAllEvents = async (req, res) => {
     }
   };
 
-
-// Update an event
 exports.updateEvent = async (req, res) => {
   const { id } = req.params;
   const { clubId, name, description } = req.body;
@@ -58,11 +53,6 @@ exports.updateEvent = async (req, res) => {
     res.status(500).json({ message: 'Error updating event', error: err.message });
   }
 };
-
-
-
-
-// Delete an event
 exports.deleteEvent = async (req, res) => {
   const { id } = req.params;
   

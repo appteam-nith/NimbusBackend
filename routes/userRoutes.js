@@ -74,9 +74,6 @@ router.post('/users/register', userController.createUser);
  *         description: Invalid credentials.
  */
 router.post('/users/login', userController.loginUser);
-
-
-
 router.get('/balance/:userId', userController.getBalance);
 /**
  * @swagger

@@ -108,11 +108,10 @@ exports.getClubTransactionHistory = async (req, res) => {
   try {
     const { clubId } = req.params;
 
-    if (req.user.role !== 'admin' && req.user.role !== 'clubAdmin'
-
-    ) {
-      return res.status(403).json({ message: 'Unauthorized access' });
-    }
+    // Update getClubTransactionHistory
+if (req.user.role === 'clubAdmin' && req.user.clubId.toString() !== clubId) {
+  return res.status(403).json({ message: 'Unauthorized for this club' });
+}
  
     const clubTransactions = await Transaction.find({
       $or: [

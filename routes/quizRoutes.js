@@ -25,38 +25,57 @@
 //   );
 
   
+// // module.exports = router;
+
+// const express = require('express');
+// const router = express.Router();
+// const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
+// const {
+//   createQuiz,
+//   getQuizzesByEvent,
+//   getQuizById,
+//   submitQuiz
+// } = require('../controllers/quizController');
+
+// router.post('/', authenticateToken, authorizeRole, createQuiz);
+// router.get('/event/:eventId', getQuizzesByEvent);
+// router.get('/:quizId', getQuizById);
+// router.post('/:quizId/submit', authMiddleware, submitQuiz);
+
 // module.exports = router;
 
 
+
+// const express = require('express');
+// const router = express.Router();
+// const {
+//   createQuiz,
+//   getQuizByEvent,
+//   getQuizById,
+//   submitQuiz
+// } = require('../controllers/quizController');
+
+// const { authenticateToken, authorizeRole, authorizeClubAccess } = require('../middleware/authMiddleware');
+
+// router.post('/', createQuiz);
+
+// // Public endpoints
+// router.get('/event/:eventId', getQuizByEvent);
+// router.get('/:quizId', getQuizById);
+// // Protected endpoints
+// router.post('/:quizId/submit', authenticateToken , submitQuiz);
+
+// module.exports = router;
 const express = require('express');
 const router = express.Router();
-const eventController = require('../controllers/eventController');
-const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
+const quizController = require('../controllers/quizController');
+const {authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
-// Event Routes
-router.get('/events', eventController.getAllEvents);
-router.get('/events/:id', eventController.getEventById);
-
-// Protected routes
-router.post(
-  '/events',
-  authenticateToken,
-  authorizeRole('clubAdmin', 'admin'),
-  eventController.createEvent
-);
-
-router.put(
-  '/events/:id',
-  authenticateToken,
-  authorizeRole('clubAdmin', 'admin'),
-  eventController.updateEvent
-);
-
-router.delete(
-  '/events/:id',
-  authenticateToken,
-  authorizeRole('clubAdmin', 'admin'),
-  eventController.deleteEvent
-);
+router.post('/create',  authenticateToken , authorizeRole('admin', 'clubAdmin') ,quizController.createQuiz);
+router.get('/:quizId', quizController.getQuizById);
+router.post('/:quizId/submit', quizController.submitQuiz);
+router.get('/:quizId/winners', quizController.getQuizWinners);
 
 module.exports = router;
+
+

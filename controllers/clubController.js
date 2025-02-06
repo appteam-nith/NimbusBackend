@@ -31,23 +31,6 @@ exports.getAllClubs = async (req, res) => {
   }
 };
 
-// get club by id or name
-// exports.getClub = async (req, res) => {
-//   try {
-//     const club = await Club.findById(req.params._id);
-    
-//     if (!club) {
-//       return res.status(404).json({ message: 'Club not found' });
-//     }
-
-//     res.status(200).json(club);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: 'Error retrieving club', error: error.message });
-//   }
-// };
-
-
 exports.getClub = async (req, res) => {
   try {
     const clubId = req.params.clubId;
@@ -69,10 +52,6 @@ exports.getClub = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving club', error: error.message });
   }
 };
-
-
-
-
 
 exports.getClubBalance =  async (req, res) => {
   try {
