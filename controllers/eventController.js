@@ -23,14 +23,38 @@ exports.getEventById = async (req, res) => {
     }
   };
 
-exports.getAllEvents = async (req, res) => {
-    try {
-      const events = await Event.find().populate('clubId attendees').exec();
-      res.status(200).json(events);
-    } catch (err) {
-      res.status(500).json({ message: 'Error fetching events', error: err.message });
-    }
-  };
+// exports.getAllEvents = async (req, res) => {
+//     try {
+//       const events = await Event.find().populate('clubId attendees').exec();
+//       res.status(200).json(events);
+//     } catch (err) {
+//       res.status(500).json({ message: 'Error fetching events', error: err.message });
+//     }
+//   };
+
+exports.getAllEventDetails = async (req, res) => {
+  try {
+    const events = await Event.find()
+      .populate({
+        path: 'clubId',
+        select: 'name _id',
+      })
+      .select('name _id description clubId')
+      .exec();
+
+    const eventDetails = events.map(event => ({
+      eventId: event._id,
+      eventName: event.name,
+      eventDescription: event.description,
+      club: event.clubId?.name || event.clubId?._id
+    }));
+
+    res.status(200).json(eventDetails);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching event details', error: err.message });
+  }
+};
+
 
 exports.updateEvent = async (req, res) => {
   const { id } = req.params;

@@ -75,6 +75,10 @@ router.post('/create',  authenticateToken , authorizeRole('admin', 'clubAdmin') 
 router.get('/:quizId', quizController.getQuizById);
 router.post('/:quizId/submit', quizController.submitQuiz);
 router.get('/:quizId/winners', quizController.getQuizWinners);
+router.get('/event/:eventId', quizController.getQuizByEventId);
+router.post('/event/:eventId/submit', authenticateToken, quizController.submitQuizByEventId);
+
+
 
 module.exports = router;
 

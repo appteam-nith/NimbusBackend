@@ -478,6 +478,52 @@ exports.getQuizWinners = async (req, res) => {
 };
 
 
+// Fetch quiz by event ID
+exports.getQuizByEventId = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const quiz = await Quiz.findOne({ eventId });
+
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found for this event' });
+    }
+
+    res.status(200).json({ quiz });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Submit quiz by event ID
+exports.submitQuizByEventId = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { userId, answers } = req.body;
+
+    const quiz = await Quiz.findOne({ eventId });
+
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found for this event' });
+    }
+
+    let score = 0;
+
+    // Evaluate the answers
+    quiz.questions.forEach((question, index) => {
+      if (answers[index] === question.correctAnswerIndex) {
+        score++;
+      }
+    });
+
+    const submission = new Submission({ quizId: quiz._id, userId, answers, score });
+    await submission.save();
+
+    res.status(201).json({ message: 'Quiz submitted successfully', score });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 // Fetch questions
 // exports.getQuestions = async (req, res) => {
