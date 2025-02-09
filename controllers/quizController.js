@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const Quiz = require('../models/quizModel');
 const Submission = require('../models/submissionModel');
 // // Create quiz
@@ -494,12 +495,32 @@ exports.getQuizByEventId = async (req, res) => {
   }
 };
 
-// Submit quiz by event ID
+
 exports.submitQuizByEventId = async (req, res) => {
   try {
     const { eventId } = req.params;
-    const { userId, answers } = req.body;
+    const { answers } = req.body;
 
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1]; // Assuming "Bearer <token>"
+    if (!token) {
+      return res.status(401).json({ message: 'Invalid token format' });
+    }
+
+    // Verify and decode the token
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const userId = decodedToken.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Invalid token or user ID not found' });
+    }
+
+    // Find the quiz by eventId
     const quiz = await Quiz.findOne({ eventId });
 
     if (!quiz) {
@@ -515,6 +536,7 @@ exports.submitQuizByEventId = async (req, res) => {
       }
     });
 
+    // Save the submission
     const submission = new Submission({ quizId: quiz._id, userId, answers, score });
     await submission.save();
 
@@ -523,6 +545,38 @@ exports.submitQuizByEventId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Submit quiz by event ID
+// exports.submitQuizByEventId = async (req, res) => {
+//   try {
+//     const { eventId } = req.params;
+//     const { userId, answers } = req.body;
+
+//     const quiz = await Quiz.findOne({ eventId });
+
+//     if (!quiz) {
+//       return res.status(404).json({ message: 'Quiz not found for this event' });
+//     }
+
+//     let score = 0;
+
+//     // Evaluate the answers
+//     quiz.questions.forEach((question, index) => {
+//       if (answers[index] === question.correctAnswerIndex) {
+//         score++;
+//       }
+//     });
+
+//     const submission = new Submission({ quizId: quiz._id, userId, answers, score });
+//     await submission.save();
+
+//     res.status(201).json({ message: 'Quiz submitted successfully', score });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
 
 
 // Fetch questions

@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
   },
   rollNo: {
     type: String,
-    required: true,
+    required: false,
     unique: true
   },
   balance: {
