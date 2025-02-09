@@ -478,6 +478,27 @@ exports.getQuizWinners = async (req, res) => {
   }
 };
 
+exports.getQuizWinnersWithUserDetails = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+
+    const winners = await Submission.find({ quizId })
+      .populate('userId', 'name') // Populates user name from the User model
+      .populate('quizId', 'title') // Populates quiz title from the Quiz model
+      .sort({ score: -1, submittedAt: 1 }) // Sort by highest score, earliest submission
+      .limit(3);
+
+    if (winners.length === 0) {
+      return res.status(404).json({ message: 'No submissions found for this quiz.' });
+    }
+
+    res.status(200).json({ winners });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 
 // Fetch quiz by event ID
 exports.getQuizByEventId = async (req, res) => {
@@ -545,6 +566,7 @@ exports.submitQuizByEventId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Submit quiz by event ID
 // exports.submitQuizByEventId = async (req, res) => {

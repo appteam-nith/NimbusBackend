@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const chalk = require('chalk');
 const setupSwagger = require('./configuration/swagger');
 const mongoose = require('mongoose');
 const authMiddleware = require('./middleware/authMiddleware')
@@ -21,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => console.log(chalk.green.bold(`✅ Connected to MongoDB at ${chalk.blue.underline(process.env.MONGO_URI)}`)))
   .catch((err) => console.error('Error connecting to MongoDB:', err));
 // Routes
 ;
@@ -37,6 +38,5 @@ setupSwagger(app)
 // Start the server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(chalk.green.bold(`🚀 Server is running on port ${chalk.blueBright.bold(PORT)}`));
 });
-
