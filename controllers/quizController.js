@@ -548,6 +548,12 @@ exports.submitQuizByEventId = async (req, res) => {
       return res.status(404).json({ message: 'Quiz not found for this event' });
     }
 
+    const existingSubmission = await Submission.findOne({ quizId: quiz._id, userId });
+
+    if (existingSubmission) {
+      return res.status(400).json({ message: 'You have already submitted this quiz', submissionStatus: true });
+    }
+
     let score = 0;
 
     // Evaluate the answers
