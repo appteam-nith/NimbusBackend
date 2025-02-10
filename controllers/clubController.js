@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // Create a new club
 exports.createClub = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, image } = req.body;
 
     // Check if club already exists
     const existingClub = await Club.findOne({ name });
@@ -12,7 +12,7 @@ exports.createClub = async (req, res) => {
     }
 
     // Create new club
-    const club = new Club({ name, description });
+    const club = new Club({ name, description, image });
     await club.save();
 
     res.status(201).json({ message: 'Club created successfully', club });
