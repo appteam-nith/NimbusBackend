@@ -434,34 +434,34 @@ exports.getQuizById = async (req, res) => {
 };
 
 // Submit quiz answers
-exports.submitQuiz = async (req, res) => {
-  try {
-    const { quizId } = req.params;
-    const { userId, answers } = req.body;
+// exports.submitQuiz = async (req, res) => {
+//   try {
+//     const { quizId } = req.params;
+//     const { userId, answers } = req.body;
 
-    const quiz = await Quiz.findById(quizId);
+//     const quiz = await Quiz.findById(quizId);
 
-    if (!quiz) {
-      return res.status(404).json({ message: 'Quiz not found' });
-    }
+//     if (!quiz) {
+//       return res.status(404).json({ message: 'Quiz not found' });
+//     }
 
-    let score = 0;
+//     let score = 0;
 
-    // Evaluate the answers
-    quiz.questions.forEach((question, index) => {
-      if (answers[index] === question.correctAnswerIndex) {
-        score++;
-      }
-    });
+//     // Evaluate the answers
+//     quiz.questions.forEach((question, index) => {
+//       if (answers[index] === question.correctAnswerIndex) {
+//         score++;
+//       }
+//     });
 
-    const submission = new Submission({ quizId, userId, answers, score });
-    await submission.save();
+//     const submission = new Submission({ quizId, userId, answers, score });
+//     await submission.save();
 
-    res.status(201).json({ message: 'Quiz submitted successfully', score });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+//     res.status(201).json({ message: 'Quiz submitted successfully', score });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 // Fetch winners based on correct answers and submission time
 exports.getQuizWinners = async (req, res) => {
@@ -486,7 +486,6 @@ exports.getQuizWinnersWithUserDetails = async (req, res) => {
       .populate('userId', 'name') // Populates user name from the User model
       .populate('quizId', 'title') // Populates quiz title from the Quiz model
       .sort({ score: -1, submittedAt: 1 }) // Sort by highest score, earliest submission
-      .limit(3);
 
     if (winners.length === 0) {
       return res.status(404).json({ message: 'No submissions found for this quiz.' });
@@ -573,6 +572,52 @@ exports.submitQuizByEventId = async (req, res) => {
   }
 };
 
+
+exports.checkQuizSubmissionStatus = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1]; // Assuming "Bearer <token>"
+    if (!token) {
+      return res.status(401).json({ message: 'Invalid token format' });
+    }
+
+    // Verify and decode the token
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const userId = decodedToken.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Invalid token or user ID not found' });
+    }
+
+    // Find the quiz by eventId
+    const quiz = await Quiz.findOne({ eventId });
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found for this event' });
+    }
+
+    // Check if the user has already submitted the quiz
+    const submission = await Submission.findOne({ quizId: quiz._id, userId });
+
+    if (submission) {
+      return res.status(200).json({
+        message: 'Quiz already submitted',
+        submissionStatus: true,
+        score: submission.score,
+      });
+    }
+
+    res.status(200).json({ message: 'Quiz not submitted', submissionStatus: false });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 // Submit quiz by event ID
 // exports.submitQuizByEventId = async (req, res) => {
