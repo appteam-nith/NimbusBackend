@@ -567,7 +567,7 @@ exports.submitQuizByEventId = async (req, res) => {
     const submission = new Submission({ quizId: quiz._id, userId, answers, score });
     await submission.save();
 
-    res.status(201).json({ message: 'Quiz submitted successfully', score });
+    res.status(201).json({ message: 'Quiz submitted successfully', score, submissionStatus: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
