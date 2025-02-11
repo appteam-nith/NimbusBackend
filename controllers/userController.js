@@ -223,7 +223,10 @@ exports.loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        balance: user.balance
+        balance: user.balance,
+        rollNo: user.rollNo,
+        id: user.id
+        
       }
     });
   } catch (err) {
