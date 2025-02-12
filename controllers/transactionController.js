@@ -4,22 +4,29 @@ const Transaction = require('../models/transaction');
 const { v4: uuidv4 } = require('uuid'); // For unique coin tracking
 const { authenticateToken } = require('../middleware/authMiddleware')
 
+
 exports.transferMoneyToClub = async (req, res) => {
   try {
-    const { rollNo, clubId, amount } = req.body;
+    const userId = req.user?.id || req.body.userId; // Extract user ID from JWT or request body
+    const { clubId, amount } = req.body;
 
-    // Find user 
-    const user = await User.findOne({ rollNo:rollNo});
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    // Find user by _id
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    // Find club
+
+    // Find club by _id
     const club = await Club.findById(clubId);
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
 
-    // Check balance
+    // Check if the user has enough balance
     if (user.balance < amount) {
       return res.status(400).json({ message: 'Insufficient balance' });
     }
@@ -32,10 +39,9 @@ exports.transferMoneyToClub = async (req, res) => {
     await club.save();
 
     // Create detailed transaction record
-    const coinsTransferred = [];
-    for (let i = 0; i < amount; i++) {
-      coinsTransferred.push({ coinId: uuidv4() }); // Unique coin ID
-    }
+    const coinsTransferred = Array.from({ length: amount }, () => ({
+      coinId: uuidv4(), // Generate unique coin IDs
+    }));
 
     const transaction = new Transaction({
       senderId: user._id,
@@ -44,16 +50,20 @@ exports.transferMoneyToClub = async (req, res) => {
       receiverModel: 'Club',
       amount,
       coins: coinsTransferred,
-      transactionType: 'user_to_club'
+      transactionType: 'user_to_club',
     });
 
     await transaction.save();
 
-    res.status(200).json({ message: 'Money transferred successfully', transaction });
+    res.status(200).json({
+      message: 'Money transferred successfully',
+      transaction,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error transferring money', error: error.message });
   }
 };
+
 
 
 // exports.getUserTransactionHistory = async (req, res) => {

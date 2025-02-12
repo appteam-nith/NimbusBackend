@@ -39,3 +39,4 @@ exports.addMoneyToUser = async (req, res) => {
     res.status(500).json({ message: 'Error adding money', error: error.message });
   }
 };
+
