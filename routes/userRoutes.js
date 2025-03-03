@@ -75,6 +75,8 @@ router.post('/users/register', userController.createUser);
  */
 router.post('/users/login', userController.loginUser);
 router.get('/balance/:userId', userController.getBalance);
+router.get('/users/:id', userController.getUserById);
+
 /**
  * @swagger
  * /users/protected-route:
