@@ -133,6 +133,8 @@ exports.completeTaskByQRCode = async (req, res) => {
               return res.status(404).json({ message: serviceError.message });
           } else if (serviceError.message === 'This task is not assigned to you') {
               return res.status(403).json({ message: serviceError.message });
+          } else if (serviceError.message === 'This task is not assigned to any user') {
+              return res.status(400).json({ message: serviceError.message });
           } else if (serviceError.message === 'Task already completed') {
               return res.status(400).json({ message: serviceError.message });
           } else {
@@ -226,6 +228,11 @@ exports.updateTask = async (req, res) => {
     const task = await Task.findOne({ 'qrCode.code': message });
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Verify if the task is assigned to a user
+    if (!task.assignedTo) {
+      return res.status(400).json({ message: 'This task is not assigned to any user' });
     }
     
     // Verify if the task is assigned to the user

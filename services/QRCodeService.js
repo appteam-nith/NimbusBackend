@@ -25,6 +25,10 @@ const validateQRCode = async (qrCode, userId) => {
     }
     
     // Check if the task is assigned to the user
+    if (!task.assignedTo) {
+      throw new Error('This task is not assigned to any user');
+    }
+    
     if (task.assignedTo.toString() !== userId) {
       throw new Error('This task is not assigned to you');
     }
