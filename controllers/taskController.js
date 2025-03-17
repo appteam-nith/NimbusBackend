@@ -97,39 +97,6 @@ exports.getUserTasks = async (req, res) => {
 };
 
 // Complete a task via QR code scanning
-// exports.completeTaskByQRCode = async (req, res) => {
-//   try {
-//     const { qrCode } = req.body;
-//     const userId = req.user.userId;
-//     console.log(req.body);
-
-//     // Validate QR code and complete task using the service
-//     const task = await QRCodeService.validateQRCode(qrCode, userId);
-    
-//     res.status(200).json({
-//       message: 'Task completed successfully',
-//       task: {
-//         id: task._id,
-//         title: task.title,
-//         completedAt: task.completedAt,
-//         reward: task.reward
-//       }
-//     });
-//     console.log("Received qrCode:", req.body.qrCode);
-
-//   } catch (error) {
-//     // Handle different error types
-//     if (error.message === 'Invalid QR code') {
-//       return res.status(404).json({ message: error.message });
-//     } else if (error.message === 'This task is not assigned to you') {
-//       return res.status(403).json({ message: error.message });
-//     } else if (error.message === 'Task already completed') {
-//       return res.status(400).json({ message: error.message });
-//     }
-    
-//     res.status(500).json({ message: 'Error completing task', error: error.message });
-//   }
-// };
 exports.completeTaskByQRCode = async (req, res) => {
   try {
       const { qrCode } = req.body;
@@ -140,24 +107,39 @@ exports.completeTaskByQRCode = async (req, res) => {
           return res.status(400).json({ message: "QR Code is required" });
       }
 
-      console.log("Valid QR Code:", qrCode.toString()); // Debug log to check
-
-      // Validate QR code and complete task using the service
-      const task = await QRCodeService.validateQRCode(qrCode, userId);
-
-      if (!task) {
-          return res.status(404).json({ message: "Task not found or invalid QR code" });
+      // Check if userId is available
+      if (!userId) {
+          return res.status(401).json({ message: "Authentication required" });
       }
 
-      res.status(200).json({
-          message: "Task completed successfully",
-          task: {
-              id: task._id,
-              title: task.title,
-              completedAt: task.completedAt,
-              reward: task.reward,
-          },
-      });
+      console.log("Processing QR Code:", qrCode); // Debug log
+
+      try {
+          // Validate QR code and complete task using the service
+          const task = await QRCodeService.validateQRCode(qrCode, userId);
+
+          return res.status(200).json({
+              message: "Task completed successfully",
+              task: {
+                  id: task._id,
+                  title: task.title,
+                  completedAt: task.completedAt,
+                  reward: task.reward,
+              },
+          });
+      } catch (serviceError) {
+          // Handle specific error types from the service
+          if (serviceError.message === 'Invalid QR code') {
+              return res.status(404).json({ message: serviceError.message });
+          } else if (serviceError.message === 'This task is not assigned to you') {
+              return res.status(403).json({ message: serviceError.message });
+          } else if (serviceError.message === 'Task already completed') {
+              return res.status(400).json({ message: serviceError.message });
+          } else {
+              // Re-throw any other service errors to be caught by the outer catch block
+              throw serviceError;
+          }
+      }
   } catch (error) {
       console.error("Error completing task:", error.message);
 
@@ -167,7 +149,6 @@ exports.completeTaskByQRCode = async (req, res) => {
       });
   }
 };
-
 
 // Get all tasks (admin only)
 exports.getAllTasks = async (req, res) => {
