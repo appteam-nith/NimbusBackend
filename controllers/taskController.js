@@ -193,4 +193,52 @@ exports.generateTaskQRCode = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error generating QR code', error: error.message });
   }
+};
+
+// Update task status when QR code is scanned
+exports.updateTask = async (req, res) => {
+  try {
+    const { userId, message } = req.body;
+    
+    // Find the task by QR code message
+    const task = await Task.findOne({ 'qrCode.code': message });
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Verify if the task is assigned to the user
+    if (task.assignedTo.toString() !== userId) {
+      return res.status(403).json({ message: 'This task is not assigned to you' });
+    }
+    
+    // Check if task is already completed
+    if (task.status === 'completed') {
+      return res.status(400).json({ message: 'Task already completed' });
+    }
+    
+    // Update task status
+    task.status = 'completed';
+    task.qrCode.scannedAt = new Date();
+    task.completedAt = new Date();
+    await task.save();
+    
+    // If there's a reward, add it to the user's balance
+    if (task.reward > 0) {
+      const user = await User.findById(userId);
+      user.balance += task.reward;
+      await user.save();
+    }
+    
+    res.status(200).json({
+      message: 'Task completed successfully',
+      task: {
+        id: task._id,
+        title: task.title,
+        completedAt: task.completedAt,
+        reward: task.reward
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating task', error: error.message });
+  }
 }; 

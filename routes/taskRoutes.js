@@ -237,4 +237,43 @@ router.get('/tasks/:taskId/qrcode',
   taskController.generateTaskQRCode
 );
 
+/**
+ * @swagger
+ * /tasks/update-task:
+ *   post:
+ *     summary: Update task status when QR code is scanned
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Mark a task as completed when its QR code is scanned
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "60d21b4667d0d8992e610c86"
+ *               message:
+ *                 type: string
+ *                 example: "abc123def456"
+ *     responses:
+ *       200:
+ *         description: Task completed successfully
+ *       400:
+ *         description: Task already completed
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Task not assigned to this user
+ *       404:
+ *         description: Task not found
+ */
+router.post('/tasks/update-task', 
+  authenticateToken, 
+  taskController.updateTask
+);
+
 module.exports = router; 
