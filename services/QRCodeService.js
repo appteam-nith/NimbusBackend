@@ -1,6 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const Task = require('../models/task');
 const User = require('../models/user');
+const mongoose = require('mongoose');
+
+/**
+ * Helper function to safely compare ObjectIds
+ * @param {string|ObjectId} id1 - First ID
+ * @param {string|ObjectId} id2 - Second ID
+ * @returns {boolean} True if IDs are equal
+ */
+const areIdsEqual = (id1, id2) => {
+  try {
+    if (!id1 || !id2) return false;
+    
+    // Convert to strings for safe comparison
+    const id1Str = id1.toString();
+    const id2Str = id2.toString();
+    
+    return id1Str === id2Str;
+  } catch (err) {
+    console.error('Error comparing IDs:', err);
+    return false;
+  }
+};
 
 /**
  * Generate a unique QR code for a task
@@ -18,8 +40,18 @@ const generateQRCode = () => {
  */
 const validateQRCode = async (qrCode, userId) => {
   try {
+    console.log(`Validating QR code: "${qrCode}" for user: "${userId}"`);
+    
+    // Ensure qrCode is properly formatted
+    if (!qrCode || typeof qrCode !== 'string') {
+      console.error('Invalid QR code format:', qrCode);
+      throw new Error('Invalid QR code format');
+    }
+    
     // Find the task by QR code
     const task = await Task.findOne({ 'qrCode.code': qrCode });
+    console.log('Task found:', task ? `ID: ${task._id}, AssignedTo: ${task.assignedTo}` : 'No task found');
+    
     if (!task) {
       throw new Error('Invalid QR code');
     }
@@ -29,7 +61,9 @@ const validateQRCode = async (qrCode, userId) => {
       throw new Error('This task is not assigned to any user');
     }
     
-    if (task.assignedTo.toString() !== userId) {
+    // Use the helper function to compare IDs
+    if (!areIdsEqual(task.assignedTo, userId)) {
+      console.log(`Task assignment mismatch - task.assignedTo: ${task.assignedTo}, userId: ${userId}`);
       throw new Error('This task is not assigned to you');
     }
     
@@ -53,6 +87,7 @@ const validateQRCode = async (qrCode, userId) => {
     
     return task;
   } catch (error) {
+    console.error('Error in validateQRCode:', error.message);
     throw error;
   }
 };
@@ -78,5 +113,6 @@ const getUserTasks = async (userId) => {
 module.exports = {
   generateQRCode,
   validateQRCode,
-  getUserTasks
+  getUserTasks,
+  areIdsEqual
 }; 

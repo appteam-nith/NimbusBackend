@@ -42,6 +42,8 @@ exports.assignTaskToUser = async (req, res) => {
   try {
     const { taskId, userId } = req.body;
     
+    console.log(`Assigning task ${taskId} to user ${userId}`);
+    
     // Find the task
     const task = await Task.findById(taskId);
     if (!task) {
@@ -56,21 +58,32 @@ exports.assignTaskToUser = async (req, res) => {
     
     // Assign the task to the user
     task.assignedTo = userId;
-    await task.save();
+    console.log(`Setting task.assignedTo to: ${userId}`);
     
-    // Add the task to the user's tasks array
-    user.tasks.push(taskId);
-    await user.save();
+    // Save the task
+    const savedTask = await task.save();
+    console.log(`Task saved with assignedTo: ${savedTask.assignedTo}`);
+    
+    // Add the task to the user's tasks array if not already there
+    if (!user.tasks.includes(taskId)) {
+      user.tasks.push(taskId);
+      await user.save();
+      console.log(`Task added to user's tasks array`);
+    } else {
+      console.log(`Task already in user's tasks array`);
+    }
     
     res.status(200).json({
       message: 'Task assigned successfully',
       task: {
         id: task._id,
         title: task.title,
-        assignedTo: user.name
+        assignedTo: user.name,
+        assignedToId: task.assignedTo
       }
     });
   } catch (error) {
+    console.error("Error assigning task:", error.message);
     res.status(500).json({ message: 'Error assigning task', error: error.message });
   }
 };
@@ -102,6 +115,9 @@ exports.completeTaskByQRCode = async (req, res) => {
       const { qrCode } = req.body;
       const userId = req.user?.userId; // Ensure userId is correctly extracted
 
+      console.log("Request body:", req.body);
+      console.log("User data:", req.user);
+
       // Check if qrCode is undefined or null
       if (!qrCode) {
           return res.status(400).json({ message: "QR Code is required" });
@@ -112,11 +128,13 @@ exports.completeTaskByQRCode = async (req, res) => {
           return res.status(401).json({ message: "Authentication required" });
       }
 
-      console.log("Processing QR Code:", qrCode); // Debug log
+      // Ensure qrCode is a string
+      const qrCodeString = String(qrCode);
+      console.log("Processing QR Code:", qrCodeString);
 
       try {
           // Validate QR code and complete task using the service
-          const task = await QRCodeService.validateQRCode(qrCode, userId);
+          const task = await QRCodeService.validateQRCode(qrCodeString, userId);
 
           return res.status(200).json({
               message: "Task completed successfully",
@@ -129,7 +147,7 @@ exports.completeTaskByQRCode = async (req, res) => {
           });
       } catch (serviceError) {
           // Handle specific error types from the service
-          if (serviceError.message === 'Invalid QR code') {
+          if (serviceError.message === 'Invalid QR code' || serviceError.message === 'Invalid QR code format') {
               return res.status(404).json({ message: serviceError.message });
           } else if (serviceError.message === 'This task is not assigned to you') {
               return res.status(403).json({ message: serviceError.message });
@@ -224,19 +242,24 @@ exports.updateTask = async (req, res) => {
   try {
     const { userId, message } = req.body;
     
+    console.log(`Updating task with QR code: ${message} for user: ${userId}`);
+    
     // Find the task by QR code message
     const task = await Task.findOne({ 'qrCode.code': message });
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
     
+    console.log(`Found task: ${task._id}, assignedTo: ${task.assignedTo}`);
+    
     // Verify if the task is assigned to a user
     if (!task.assignedTo) {
       return res.status(400).json({ message: 'This task is not assigned to any user' });
     }
     
-    // Verify if the task is assigned to the user
-    if (task.assignedTo.toString() !== userId) {
+    // Verify if the task is assigned to the user using the helper function
+    if (!QRCodeService.areIdsEqual(task.assignedTo, userId)) {
+      console.log(`Task assignment mismatch - task.assignedTo: ${task.assignedTo}, userId: ${userId}`);
       return res.status(403).json({ message: 'This task is not assigned to you' });
     }
     
@@ -268,6 +291,7 @@ exports.updateTask = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error("Error updating task:", error.message);
     res.status(500).json({ message: 'Error updating task', error: error.message });
   }
 };
