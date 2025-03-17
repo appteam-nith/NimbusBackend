@@ -276,4 +276,39 @@ router.post('/tasks/update-task',
   taskController.updateTask
 );
 
+/**
+ * @swagger
+ * /tasks/assign-all:
+ *   post:
+ *     summary: Assign a task to all users
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Assign an existing task to all users in the system (admin only)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               taskId:
+ *                 type: string
+ *                 example: "60d21b4667d0d8992e610c85"
+ *     responses:
+ *       200:
+ *         description: Task assigned successfully to all users
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - User lacks required role
+ *       404:
+ *         description: Task or users not found
+ */
+router.post('/tasks/assign-all', 
+  authenticateToken, 
+  authorizeRole('admin'), 
+  taskController.assignTaskToAllUsers
+);
+
 module.exports = router; 

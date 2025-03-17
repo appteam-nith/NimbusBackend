@@ -241,4 +241,71 @@ exports.updateTask = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error updating task', error: error.message });
   }
+};
+
+// Assign task to all users
+exports.assignTaskToAllUsers = async (req, res) => {
+  try {
+    const { taskId } = req.body;
+    
+    // Find the task
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Get all users
+    const users = await User.find();
+    if (!users.length) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+    
+    // Create an array to store assignment results
+    const assignmentResults = [];
+    
+    // Assign task to each user
+    for (const user of users) {
+      try {
+        // Create a new task instance for each user
+        const userTask = new Task({
+          title: task.title,
+          description: task.description,
+          reward: task.reward,
+          qrCode: {
+            code: QRCodeService.generateQRCode() // Generate unique QR code for each user
+          },
+          assignedTo: user._id
+        });
+        
+        await userTask.save();
+        
+        // Add task to user's tasks array
+        user.tasks.push(userTask._id);
+        await user.save();
+        
+        assignmentResults.push({
+          userId: user._id,
+          userName: user.name,
+          status: 'success'
+        });
+      } catch (error) {
+        assignmentResults.push({
+          userId: user._id,
+          userName: user.name,
+          status: 'failed',
+          error: error.message
+        });
+      }
+    }
+    
+    res.status(200).json({
+      message: 'Task assignment completed',
+      results: assignmentResults
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error assigning task to all users', 
+      error: error.message 
+    });
+  }
 }; 
