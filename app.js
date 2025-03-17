@@ -10,6 +10,7 @@ const bankRoutes = require('./routes/bankRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const eventRoutes = require('./routes/eventRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 const app = express();
 
 // Middleware to parse JSON
@@ -32,6 +33,7 @@ app.use('/api', bankRoutes);
 app.use('/api', eventRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api', transactionRoutes);
+app.use('/api', taskRoutes);
 
 
 setupSwagger(app)

@@ -1,0 +1,196 @@
+const Task = require('../models/task');
+const User = require('../models/user');
+const QRCodeService = require('../services/QRCodeService');
+const qrCodeGenerator = require('../utils/qrCodeGenerator');
+
+// Create a new task
+exports.createTask = async (req, res) => {
+  try {
+    const { title, description, reward } = req.body;
+    
+    // Generate a unique QR code identifier
+    const qrCodeValue = QRCodeService.generateQRCode();
+    
+    const task = new Task({
+      title,
+      description,
+      reward: reward || 0,
+      qrCode: {
+        code: qrCodeValue
+      }
+    });
+    
+    await task.save();
+    
+    res.status(201).json({
+      message: 'Task created successfully',
+      task: {
+        id: task._id,
+        title: task.title,
+        description: task.description,
+        qrCode: task.qrCode.code,
+        reward: task.reward
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating task', error: error.message });
+  }
+};
+
+// Assign a task to a user
+exports.assignTaskToUser = async (req, res) => {
+  try {
+    const { taskId, userId } = req.body;
+    
+    // Find the task
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Assign the task to the user
+    task.assignedTo = userId;
+    await task.save();
+    
+    // Add the task to the user's tasks array
+    user.tasks.push(taskId);
+    await user.save();
+    
+    res.status(200).json({
+      message: 'Task assigned successfully',
+      task: {
+        id: task._id,
+        title: task.title,
+        assignedTo: user.name
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error assigning task', error: error.message });
+  }
+};
+
+// Get all tasks for a user
+exports.getUserTasks = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Verify if the requesting user is authorized to view these tasks
+    if (req.user.userId !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized to view these tasks' });
+    }
+    
+    // Get user tasks using the service
+    const tasks = await QRCodeService.getUserTasks(userId);
+    
+    res.status(200).json({
+      tasks
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching tasks', error: error.message });
+  }
+};
+
+// Complete a task via QR code scanning
+exports.completeTaskByQRCode = async (req, res) => {
+  try {
+    const { qrCode } = req.body;
+    const userId = req.user.userId;
+    
+    // Validate QR code and complete task using the service
+    const task = await QRCodeService.validateQRCode(qrCode, userId);
+    
+    res.status(200).json({
+      message: 'Task completed successfully',
+      task: {
+        id: task._id,
+        title: task.title,
+        completedAt: task.completedAt,
+        reward: task.reward
+      }
+    });
+  } catch (error) {
+    // Handle different error types
+    if (error.message === 'Invalid QR code') {
+      return res.status(404).json({ message: error.message });
+    } else if (error.message === 'This task is not assigned to you') {
+      return res.status(403).json({ message: error.message });
+    } else if (error.message === 'Task already completed') {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    res.status(500).json({ message: 'Error completing task', error: error.message });
+  }
+};
+
+// Get all tasks (admin only)
+exports.getAllTasks = async (req, res) => {
+  try {
+    // Check if the user is an admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized access' });
+    }
+    
+    const tasks = await Task.find().populate('assignedTo', 'name email rollNo');
+    
+    res.status(200).json({ tasks });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching tasks', error: error.message });
+  }
+};
+
+// Get task details by ID
+exports.getTaskById = async (req, res) => {
+  try {
+    const taskId = req.params.taskId;
+    
+    const task = await Task.findById(taskId).populate('assignedTo', 'name email rollNo');
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Check if the user is authorized to view this task
+    if (req.user.role !== 'admin' && task.assignedTo?._id.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Unauthorized to view this task' });
+    }
+    
+    res.status(200).json({ task });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching task', error: error.message });
+  }
+};
+
+// Generate QR code image for a task
+exports.generateTaskQRCode = async (req, res) => {
+  try {
+    const taskId = req.params.taskId;
+    
+    // Check if the user is an admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized access' });
+    }
+    
+    // Find the task
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Generate QR code image
+    const qrCodeImage = await qrCodeGenerator.generateQRCodeImage(task.qrCode.code);
+    
+    res.status(200).json({
+      taskId: task._id,
+      taskTitle: task.title,
+      qrCode: task.qrCode.code,
+      qrCodeImage
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error generating QR code', error: error.message });
+  }
+}; 

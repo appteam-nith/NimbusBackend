@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
   },
   refreshToken: {
     type: String
-},
+  },
   role: {
     type: String,
     enum: ['user', 'admin', 'clubAdmin'],
@@ -38,18 +38,15 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
   transactionHistory:{
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }]
   },
+  tasks: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
+    default: []
+  },
   correctAnswers: { 
     type: Map,
     of: Number,
     default: {}
   },
-  // clubId: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'Club',
-  //   required: function() {
-  //     return this.role === 'clubAdmin';
-  //   }
-  // },
   submissionTime: { type: Date, default: Date.now }
 });
 
