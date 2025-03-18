@@ -11,6 +11,7 @@ const quizRoutes = require('./routes/quizRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const projectRoutes = require('./routes/projectRoutes');
 const app = express();
 
 // Middleware to parse JSON
@@ -34,6 +35,7 @@ app.use('/api', eventRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api', transactionRoutes);
 app.use('/api', taskRoutes);
+app.use('/api', projectRoutes);
 
 
 setupSwagger(app)
