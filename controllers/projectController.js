@@ -197,16 +197,13 @@ exports.deleteProject = async (req, res) => {
     }
 };
 
-// Get all projects (admin only)
+// Get all projects (accessible to all users)
 exports.getAllProjects = async (req, res) => {
     try {
-        // Check if the user is an admin
-        if (req.user.role !== 'admin' && req.user.role !== 'clubAdmin') {
-            return res.status(403).json({ message: 'Unauthorized access' });
-        }
-
-        // If user is clubAdmin, only return projects for their clubs
+        // Different query logic based on user role
         let query = {};
+        
+        // If user is clubAdmin, only return projects for their clubs
         if (req.user.role === 'clubAdmin') {
             // Find clubs where this user is the admin
             const adminClubs = await Club.find({ clubAdmin: req.user.userId });
@@ -217,6 +214,8 @@ exports.getAllProjects = async (req, res) => {
             const clubIds = adminClubs.map(club => club._id);
             query = { club: { $in: clubIds } };
         }
+        // If user is not admin or clubAdmin, still return all projects (no filtering)
+        // Admin also gets all projects (no filtering)
 
         const projects = await Project.find(query)
             .populate('club', 'name description image')
