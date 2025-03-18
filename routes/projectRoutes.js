@@ -181,7 +181,7 @@ router.get('/projects/:projectId', authenticateToken, getProjectById);
  *       500:
  *         description: Server error
  */
-router.put('/projects/:projectId', authenticateToken, authorizeRole('admin', 'clubAdmin'), updateProject);
+router.put('/projects/:projectId', authenticateToken,  updateProject);
 
 /**
  * @swagger
@@ -226,6 +226,6 @@ router.delete('/projects/:projectId', authenticateToken, authorizeRole('admin', 
  *       500:
  *         description: Server error
  */
-router.get('/projects', authenticateToken, authorizeRole('admin'), getAllProjects);
+router.get('/projects', authenticateToken, getAllProjects);
 
 module.exports = router; 
