@@ -15,7 +15,7 @@ exports.createProject = async (req, res) => {
 
         // Check if the user has permission (admin or clubAdmin of this club)
         if (req.user.role !== 'admin' && 
-            !(req.user.role === 'clubAdmin' && club.clubAdmin.toString() === req.user.userId)) {
+            !(req.user.role === 'clubAdmin' && club.clubAdmin && club.clubAdmin.toString() === req.user.userId)) {
             return res.status(403).json({ message: 'Unauthorized to create projects for this club' });
         }
 
@@ -138,7 +138,7 @@ exports.updateProject = async (req, res) => {
         }
 
         if (req.user.role !== 'admin' && 
-            !(req.user.role === 'clubAdmin' && club.clubAdmin.toString() === req.user.userId)) {
+            !(req.user.role === 'clubAdmin' && club.clubAdmin && club.clubAdmin.toString() === req.user.userId)) {
             return res.status(403).json({ message: 'Unauthorized to update this project' });
         }
 
@@ -182,7 +182,7 @@ exports.deleteProject = async (req, res) => {
         // Check if the user has permission (admin or clubAdmin of this club)
         const club = await Club.findById(project.club);
         if (req.user.role !== 'admin' && 
-            !(req.user.role === 'clubAdmin' && club.clubAdmin.toString() === req.user.userId)) {
+            !(req.user.role === 'clubAdmin' && club.clubAdmin && club.clubAdmin.toString() === req.user.userId)) {
             return res.status(403).json({ message: 'Unauthorized to delete this project' });
         }
 
