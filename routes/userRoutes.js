@@ -79,6 +79,95 @@ router.get('/users/:id', userController.getUserById);
 
 /**
  * @swagger
+ * /users/profile/picture:
+ *   post:
+ *     summary: Update user's profile picture
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Updates the authenticated user's profile picture.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - imageUrl
+ *             properties:
+ *               imageUrl:
+ *                 type: string
+ *                 description: URL of the uploaded image
+ *                 example: "https://example.com/images/profile.jpg"
+ *     responses:
+ *       200:
+ *         description: Profile picture updated successfully
+ *       400:
+ *         description: Image URL is required
+ *       401:
+ *         description: Unauthorized or invalid token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/users/profile/picture', authenticateToken, userController.updateProfilePicture);
+
+/**
+ * @swagger
+ * /users/profile/picture:
+ *   get:
+ *     summary: Get user's profile picture
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieves the authenticated user's profile picture URL.
+ *     responses:
+ *       200:
+ *         description: Profile picture URL retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 profilePicture:
+ *                   type: string
+ *                   nullable: true
+ *                   description: URL of the user's profile picture, null if not set
+ *       401:
+ *         description: Unauthorized or invalid token
+ *       404:
+ *         description: User not found
+ */
+router.get('/users/profile/picture', authenticateToken, userController.getProfilePicture);
+
+/**
+ * @swagger
+ * /users/{userId}/profile/picture:
+ *   get:
+ *     summary: Get another user's profile picture
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user whose profile picture to retrieve
+ *     responses:
+ *       200:
+ *         description: Profile picture URL retrieved successfully
+ *       401:
+ *         description: Unauthorized or invalid token
+ *       404:
+ *         description: User not found
+ */
+router.get('/users/:userId/profile/picture', authenticateToken, userController.getProfilePicture);
+
+/**
+ * @swagger
  * /users/protected-route:
  *   get:
  *     summary: Access a protected route

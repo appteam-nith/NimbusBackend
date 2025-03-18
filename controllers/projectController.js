@@ -33,6 +33,10 @@ exports.createProject = async (req, res) => {
 
         await project.save();
 
+        // Update the club's projects array
+        club.projects.push(project._id);
+        await club.save();
+
         res.status(201).json({
             message: 'Project created successfully',
             project: {
@@ -40,6 +44,7 @@ exports.createProject = async (req, res) => {
                 title: project.title,
                 description: project.description,
                 clubId: project.club,
+                clubName: club.name,
                 status: project.status,
                 startDate: project.startDate,
                 imageUrl: project.imageUrl
@@ -67,7 +72,20 @@ exports.getClubProjects = async (req, res) => {
             .populate('collaborators', 'name email rollNo')
             .sort({ createdAt: -1 });
 
-        res.status(200).json({ projects });
+        // Format the response with club name
+        const formattedProjects = projects.map(project => {
+            return {
+                ...project.toObject(),
+                clubName: club.name
+            };
+        });
+
+        res.status(200).json({ 
+            clubName: club.name,
+            clubDescription: club.description,
+            clubImage: club.image,
+            projects: formattedProjects 
+        });
     } catch (error) {
         console.error('Error fetching projects:', error);
         res.status(500).json({ message: 'Error fetching projects', error: error.message });
@@ -81,13 +99,20 @@ exports.getProjectById = async (req, res) => {
 
         const project = await Project.findById(projectId)
             .populate('collaborators', 'name email rollNo')
-            .populate('club', 'name description');
+            .populate('club', 'name description image');
 
         if (!project) {
             return res.status(404).json({ message: 'Project not found' });
         }
 
-        res.status(200).json({ project });
+        // Format the response to highlight club name
+        const formattedProject = {
+            ...project.toObject(),
+            clubName: project.club.name,
+            clubImage: project.club.image
+        };
+
+        res.status(200).json({ project: formattedProject });
     } catch (error) {
         console.error('Error fetching project:', error);
         res.status(500).json({ message: 'Error fetching project', error: error.message });
@@ -108,6 +133,10 @@ exports.updateProject = async (req, res) => {
 
         // Check if the user has permission (admin or clubAdmin of this club)
         const club = await Club.findById(project.club);
+        if (!club) {
+            return res.status(404).json({ message: 'Associated club not found' });
+        }
+
         if (req.user.role !== 'admin' && 
             !(req.user.role === 'clubAdmin' && club.clubAdmin.toString() === req.user.userId)) {
             return res.status(403).json({ message: 'Unauthorized to update this project' });
@@ -122,9 +151,16 @@ exports.updateProject = async (req, res) => {
 
         await project.save();
 
+        // Format the response to include club name
+        const updatedProject = {
+            ...project.toObject(),
+            clubName: club.name,
+            clubImage: club.image
+        };
+
         res.status(200).json({
             message: 'Project updated successfully',
-            project
+            project: updatedProject
         });
     } catch (error) {
         console.error('Error updating project:', error);
@@ -165,16 +201,38 @@ exports.deleteProject = async (req, res) => {
 exports.getAllProjects = async (req, res) => {
     try {
         // Check if the user is an admin
-        if (req.user.role !== 'admin') {
+        if (req.user.role !== 'admin' && req.user.role !== 'clubAdmin') {
             return res.status(403).json({ message: 'Unauthorized access' });
         }
 
-        const projects = await Project.find()
-            .populate('club', 'name')
-            .populate('collaborators', 'name email')
+        // If user is clubAdmin, only return projects for their clubs
+        let query = {};
+        if (req.user.role === 'clubAdmin') {
+            // Find clubs where this user is the admin
+            const adminClubs = await Club.find({ clubAdmin: req.user.userId });
+            if (adminClubs.length === 0) {
+                return res.status(200).json({ projects: [] });
+            }
+            
+            const clubIds = adminClubs.map(club => club._id);
+            query = { club: { $in: clubIds } };
+        }
+
+        const projects = await Project.find(query)
+            .populate('club', 'name description image')
+            .populate('collaborators', 'name email rollNo')
             .sort({ createdAt: -1 });
 
-        res.status(200).json({ projects });
+        // Format projects to include club name prominently
+        const formattedProjects = projects.map(project => {
+            return {
+                ...project.toObject(),
+                clubName: project.club.name,
+                clubImage: project.club.image
+            };
+        });
+
+        res.status(200).json({ projects: formattedProjects });
     } catch (error) {
         console.error('Error fetching all projects:', error);
         res.status(500).json({ message: 'Error fetching all projects', error: error.message });

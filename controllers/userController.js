@@ -225,8 +225,8 @@ exports.loginUser = async (req, res) => {
         role: user.role,
         balance: user.balance,
         rollNo: user.rollNo,
+        profilePicture: user.profilePicture,
         id: user.id
-        
       }
     });
   } catch (err) {
@@ -243,7 +243,20 @@ exports.getUserProfile = async (req, res) => {
           return res.status(404).json({ message: 'User not found' });
       }
 
-      res.status(200).json(user);
+      // Format the response to explicitly include the profile picture
+      const userProfile = {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          balance: user.balance,
+          rollNo: user.rollNo,
+          profilePicture: user.profilePicture,
+          tasks: user.tasks,
+          transactionHistory: user.transactionHistory
+      };
+
+      res.status(200).json(userProfile);
   } catch (error) {
       res.status(500).json({ message: 'Error fetching profile', error: error.message });
   }
@@ -283,5 +296,62 @@ exports.getBalance = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update user's profile picture
+exports.updateProfilePicture = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const userId = req.user.userId;
+
+    // Validate imageUrl is present
+    if (!imageUrl) {
+      return res.status(400).json({ message: 'Image URL is required' });
+    }
+
+    // Find the user and update profile picture
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update user's profile picture
+    user.profilePicture = imageUrl;
+    await user.save();
+
+    res.status(200).json({
+      message: 'Profile picture updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePicture: user.profilePicture
+      }
+    });
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    res.status(500).json({ message: 'Error updating profile picture', error: error.message });
+  }
+};
+
+// Get user's profile picture
+exports.getProfilePicture = async (req, res) => {
+  try {
+    const userId = req.params.userId || req.user.userId;
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return profile picture URL
+    res.status(200).json({
+      profilePicture: user.profilePicture
+    });
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+    res.status(500).json({ message: 'Error fetching profile picture', error: error.message });
   }
 };

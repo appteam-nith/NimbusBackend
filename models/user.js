@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({ // Corrected from userScehma to userSch
     required: false,
     unique: true
   },
+  profilePicture: {
+    type: String,
+    default: null
+  },
   balance: {
     type: Number,
     default: 0
@@ -67,6 +71,7 @@ userSchema.methods.generateAccessToken = function() {
           rollNo: this.rollNo,
           email: this.email,
           balance: this.balance,
+          profilePicture: this.profilePicture,
           refreshToken: this.refreshToken,
       
       },
