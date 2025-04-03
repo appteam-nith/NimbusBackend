@@ -1,0 +1,17 @@
+service: appteam-service
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    MONGO_URI: ${env:MONGO_URI}
+    PORT: 4000
+
+functions:
+  app:
+    handler: handler.server
+    events:
+      - http:
+          path: /{any+}
+          method: any
